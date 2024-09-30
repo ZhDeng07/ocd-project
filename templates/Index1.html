@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCD LLMs - Voice and Text Input with Continuous and Non-Overwriting Output</title>
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="icon" href="static/docicon.ico">
+</head>
+<body>
+    <h1>OCD LLMs Website with Voice and Text Input</h1>
+    <p>Please speak or type the patient information:(Note: The output will be a 10-item graded exposure hierarchy for ERP)</p>
+
+    <!-- 语音输入和暂停按钮 -->
+    <button id="start-btn" onclick="startRecognition()">Start Voice Input</button>
+    <button id="pause-btn" onclick="pauseRecognition()" disabled>Pause Voice Input</button>
+    
+    <!-- 文本输入框和提交按钮 -->
+    <p>Or manually enter text:</p>
+    <textarea id="manualInput" placeholder="Type text here" rows="3" cols="30"></textarea><br>
+    <button id="submit-btn" onclick="submitText()">Submit</button>
+
+    <!-- 输出框 -->
+    <div id="output-container">
+        <div>
+            <p>Output (Text from Speech or Manual Input):</p>
+            <div id="output"></div>
+            <button id="submit-gpt" onclick="submitTextToChatGPT()">SubmitToGPT</button>
+            <button id="clear-btn" onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <!-- Output box for ChatGPT response -->
+        <div>
+            <p>ChatGPT Output:</p>
+            <div id="chatgpt-output"></div>
+            <!-- voice output button-->
+            <button id="voice-output-btn" onclick="speakGPTOutput()">Voice Output</button>
+            <button id="pause-voice-btn" onclick="pauseVoiceOutput()" disabled>Pause Voice Output</button>
+            <button id="end-voice-btn" onclick="endVoiceOutput()" disabled>End Voice Output</button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化语音识别对象
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';  // 设置语言为英语
+        recognition.interimResults = true;  // 启用实时结果
+        recognition.continuous = true;  // 持续监听语音
+
+        let isRecognizing = false;  // 标志位判断是否正在录音
+        let isPaused = false;  // 判断是否是用户手动暂停
+        let fullTranscript = '';  // 保存完整的文本
+
+        let speechSynthesisUtterance;  // 全局存储语音对象
+
+        // 当用户完成语音输入后，将文本显示在output区域
+        recognition.onresult = function(event) {
+            let interimTranscript = '';  // 临时存储当前片段文本
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    fullTranscript += transcript + ' ';  // 追加最终结果到完整文本
+                } else {
+                    interimTranscript += transcript;  // 保存临时结果
+                }
+            }
+            // 将最终文本和临时文本显示在输出框中
+            document.getElementById('output').textContent = fullTranscript + interimTranscript;
+        };
+
+        // 当语音识别开始时，更新UI提示用户说话
+        recognition.onstart = function() {
+            document.getElementById('output').textContent = 'Listening...';
+        };
+
+        // 当语音识别结束时，判断是否手动暂停，如果不是则重新启动识别
+        recognition.onend = function() {
+            if (!isPaused) {
+                recognition.start();  // 重新开始录音
+            }
+        };
+
+        // 错误处理
+        recognition.onerror = function(event) {
+            document.getElementById('output').textContent = 'Error occurred in recognition: ' + event.error;
+            isRecognizing = false;
+            document.getElementById('start-btn').disabled = false;  // 允许重新开始
+            document.getElementById('pause-btn').disabled = true;   // 禁用暂停按钮
+        };
+
+        // 启动语音识别
+        function startRecognition() {
+            if (!isRecognizing) {
+                document.getElementById('output').textContent = '';
+                console.log("start recording user's voice input.");
+                recognition.start();
+                isRecognizing = true;
+                isPaused = false;
+                document.getElementById('start-btn').disabled = true;   // 禁用开始按钮
+                document.getElementById('pause-btn').disabled = false;  // 启用暂停按钮
+            }
+        }
+
+        // 暂停语音识别
+        function pauseRecognition() {
+            if (isRecognizing) {
+                isPaused = true;  // 标记为手动暂停
+                recognition.stop();  // 停止录音
+                isRecognizing = false;
+                document.getElementById('start-btn').disabled = false;  // 允许重新开始
+                document.getElementById('pause-btn').disabled = true;   // 禁用暂停按钮
+                console.log("user's voice input stop.")
+                document.getElementById('output').textContent;
+            }
+        }
+
+        function clearOutput() {
+            console.log("Clear the ouput.");
+            document.getElementById('output').textContent = '';
+            fullTranscript = '';  // Reset full transcript
+        }
+
+        // 手动输入文本并提交
+        function submitText() {
+            console.log("submitText() is called.")
+            const manualInput = document.getElementById("manualInput").value;
+            if (manualInput.trim() !== '') {  // 如果输入不为空
+                fullTranscript = '';
+                fullTranscript += manualInput + ' ';  // 追加到完整的文本
+                document.getElementById('output').textContent = fullTranscript;  // 更新输出
+                document.getElementById("manualInput").value = '';  // 清空输入框
+            }
+        }
+
+        async function submitTextToChatGPT() {
+            console.log("submitTexttoChatGPT() is called.")
+            const fullTranscript = document.getElementById("output").textContent;
+
+            if (fullTranscript.trim() !== '') {
+                try{
+                    console.log("Sending to ChatGPT: ", fullTranscript)
+                    const response = await fetch('/api/gpt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: fullTranscript })
+                });
+                
+                if(!response.ok){
+                    const errorData = await response.json();
+                    console.error("Error response from server: ", errorData)
+                    document.getElementById('chatgpt-output').innerText = "Error: " + errorData.error;
+                    return;
+                }
+
+                const data = await response.json();
+                console.log("Received response from ChatGPT:", data);
+                document.getElementById('chatgpt-output').innerText = data;
+            } catch(error){
+                console.error("Error during fetch:", error);
+                document.getElementById('chatgpt-output').innerText = "Error: Could not connect to ChatGPT.";
+            }
+            }else{
+                console.log("Output box is empty. Nothing to submit.");
+            }
+        }
+
+        // Voice output for GPT response 
+        function speakGPTOutput() {
+            const chatGPTOutput = document.getElementById('chatgpt-output').innerText;
+
+            if (chatGPTOutput.trim() !== '') {
+                speechSynthesisUtterance = new SpeechSynthesisUtterance(chatGPTOutput);
+                speechSynthesisUtterance.lang = 'en-US';  // 设置语言为英语
+
+                // 当语音开始时，启用“暂停”和“结束”按钮
+                speechSynthesisUtterance.onstart = function() {
+                    document.getElementById('pause-voice-btn').disabled = false;
+                    document.getElementById('end-voice-btn').disabled = false;
+                };
+
+                // 当语音播放结束时，禁用“暂停”和“结束”按钮，并将按钮文本恢复为“Pause”
+                speechSynthesisUtterance.onend = function() {
+                    document.getElementById('pause-voice-btn').disabled = true;
+                    document.getElementById('end-voice-btn').disabled = true;
+                    document.getElementById('pause-voice-btn').innerText = "Pause Voice Output";  // 恢复按钮为“Pause”
+                };
+
+                window.speechSynthesis.speak(speechSynthesisUtterance);  // 使用SpeechSynthesis接口将文本转为语音
+            } else {
+                console.log("No text available for voice output.");
+            }
+        }
+        
+        function pauseVoiceOutput() {
+            if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+                // 暂停语音播放
+                window.speechSynthesis.pause();
+                console.log("Voice output paused.");
+                document.getElementById('pause-voice-btn').innerText = "Resume Voice Output";  // 修改按钮文本为 "Resume"
+            } else if (window.speechSynthesis.paused) {
+                // 继续语音播放
+                window.speechSynthesis.resume();
+                console.log("Voice output resumed.");
+                document.getElementById('pause-voice-btn').innerText = "Pause Voice Output";  // 继续播放后将按钮文本改回 "Pause"
+            }
+        }
+        
+        function endVoiceOutput() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();  // 结束语音播放
+                console.log("Voice output ended.");
+                document.getElementById('pause-voice-btn').disabled = true;
+                document.getElementById('end-voice-btn').disabled = true;
+                document.getElementById('pause-voice-btn').innerText = "Pause Voice Output";  // 恢复按钮为“Pause”
+            }
+        }
+    </script>
+</body>
+</html>
