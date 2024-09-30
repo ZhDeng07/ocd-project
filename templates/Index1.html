@@ -37,6 +37,19 @@
             <button id="voice-output-btn" onclick="speakGPTOutput()">Voice Output</button>
             <button id="pause-voice-btn" onclick="pauseVoiceOutput()" disabled>Pause Voice Output</button>
             <button id="end-voice-btn" onclick="endVoiceOutput()" disabled>End Voice Output</button>
+            
+            <div class="savebutton">
+            <!-- 保存格式的下拉菜单 -->
+            <label for="fileFormat">Save as:</label>
+            <select id="fileFormat">
+                <option value="txt">Text File (.txt)</option>
+                <option value="json">JSON File (.json)</option>
+                <option value="csv">CSV File (.csv)</option>
+            </select>
+            
+            <!-- Save按钮 -->
+            <button id="save-btn" onclick="saveOutput()">Save Output</button>
+            </div>
         </div>
     </div>
 
@@ -216,6 +229,43 @@
                 document.getElementById('end-voice-btn').disabled = true;
                 document.getElementById('pause-voice-btn').innerText = "Pause Voice Output";  // 恢复按钮为“Pause”
             }
+        }
+
+        function saveOutput() {
+            const gptOutput = document.getElementById('chatgpt-output').innerText;  // 获取GPT的输出
+            const fileFormat = document.getElementById('fileFormat').value;  // 获取选择的文件格式
+
+            if (!gptOutput.trim()) {
+                alert("No GPT output to save!");  // 如果GPT输出为空，给用户提示
+                return;
+            }
+
+            let blob;
+            let fileName = 'gpt_output';  // 默认文件名
+
+            // 根据选择的文件格式生成内容
+            if (fileFormat === 'txt') {
+                blob = new Blob([gptOutput], { type: 'text/plain' });
+                fileName += '.txt';
+            } else if (fileFormat === 'json') {
+                const jsonOutput = JSON.stringify({ output: gptOutput }, null, 2);  // 转换为JSON格式
+                blob = new Blob([jsonOutput], { type: 'application/json' });
+                fileName += '.json';
+            } else if (fileFormat === 'csv') {
+                const csvOutput = "Output\n" + gptOutput.replace(/\n/g, ',');  // 简单的CSV格式
+                blob = new Blob([csvOutput], { type: 'text/csv' });
+                fileName += '.csv';
+            }
+
+            // 创建下载链接并自动点击下载
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);  // 下载完成后移除元素
+            URL.revokeObjectURL(url);  // 释放URL对象
         }
     </script>
 </body>

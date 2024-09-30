@@ -89,6 +89,11 @@ button:hover {
     background-color: #1e88e5;
 }
 
+/* Save the document */
+.savebutton{
+    margin-top: 5px;
+}
+
 /* Responsiveness */
 @media (max-width: 800px) {
     #userInput, #manualInput {
