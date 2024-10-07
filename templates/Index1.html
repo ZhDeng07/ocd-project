@@ -234,4 +234,12 @@
         document.body.removeChild(a);  // 下载完成后移除元素
         URL.revokeObjectURL(url);  // 释放URL对象
     }
+
+    const textarea = document.getElementById('userInput');
+    textarea.addEventListener('input', function() {
+        // 重设高度以计算当前内容所需的正确高度
+        this.style.height = 'auto'; 
+        // 动态设置高度为内容的高度
+        this.style.height = (this.scrollHeight) + 'px';
+    });
 </script>
