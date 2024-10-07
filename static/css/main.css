@@ -1,106 +1,142 @@
-/* Main content styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+header {
+    background-color: grey;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#content-area {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1; /* Middle section grows to fill available space */
     padding: 20px;
 }
 
-h1 {
-    color: #333;
+.output-box {
+    flex-grow: 3;
+    padding: 20px;
+    border-radius: 15px;
+    color: black;
+    display: flex;
+    justify-content: flex-start;
+    border: 5px solid pink;
+    width: 60%;
 }
 
-p {
-    color: #555;
+#chatgptoutput{
+
 }
 
-/* Textarea and output box */
-#userInput, #manualInput {
-    width: 700px;
-    height: 200px;
-    padding: 10px;
-    font-size: 16px;
-    margin-bottom: 20px;
+.doctor-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 40%;
 }
 
-#output-container {
+.doctor-container img {
+    width: 100%;
+    max-width: 700px;
+    height: auto;
+    border: 1px solid black;
+    border-radius: 10%;
+}
+
+.voice_button{
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+#speak-pause-button{
     margin-top: 20px;
-}
-
-#output {
-    border: 1px solid #000;
-    padding: 10px;
-    width: 700px;
-    height: 400px;
-    overflow-y: auto;
-    background-color: white;
-    margin-top: 10px;
-}
-
-#chatgpt-output {
-    border: 1px solid #000;
-    padding: 10px;
-    width: 700px;
-    height: 400px;
-    overflow-y: auto;
-    background-color: white;
-    margin-top: 10px;
-    margin-right: 10px;
-}
-
-/* Button styles */
-button {
-    background-color: #4CAF50;
-    color: white;
     padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-right: 10px;
+    margin-right:10px;
+    background-color: rgba(50, 219, 225, 0.82);
+    color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
-button:hover {
-    background-color: #45a049;
+#stop-button{
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: purple;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
-#pause-btn {
-    background-color: #f44336; /* Red for pause button */
+#save-output-button{
+    margin-top: 20px;
+    padding: 10px 20px;
+    margin-left: 10px;
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
-#pause-btn:hover {
-    background-color: #e53935;
-}
-
-#submit-btn {
-    background-color: #2196F3; /* Blue for submit button */
-}
-
-#submit-gpt{
+#input-container {
+    display: flex;
+    justify-content: space-between;
     padding: 10px;
-    margin-top: 15px;
-    background-color: #2196F3;
-    
+    background-color: #ddd;
+    border-top: 1px solid #ccc;
 }
 
-#submit-btn:hover {
-    background-color: #1e88e5;
+#userInput {
+    font-size: larger;
+    font-weight: bold;
+    flex-grow: 1;
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
 }
 
-/* Save the document */
-.savebutton{
-    margin-top: 5px;
+#send-button, #speak-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
 }
 
-/* Responsiveness */
-@media (max-width: 800px) {
-    #userInput, #manualInput {
-        width: 100%;
-    }
-    
-    #output {
-        width: 100%;
-    }
+#send-button {
+    background-color: limegreen;
+    color: white;
+    margin-right: 10px;
+}
+
+#speak-button {
+    background-color: orange;
+    color: white;
 }
